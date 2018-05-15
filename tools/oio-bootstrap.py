@@ -1260,10 +1260,6 @@ def generate(options):
             add_service(env)
             # gridinit config
             tpl = Template(template_gridinit_beanstalkd)
-            if options.get('with_persistence'):
-                ENV.update({'OPT_ARGS' : '-O PersistencePath=/tmp/consciencePersistenceFile PersistencePeriod=15'})
-            else:
-                ENV.update({'OPT_ARGS' : ''})
             with open(gridinit(env), 'a+') as f:
                 f.write(tpl.safe_substitute(env))
                 for key in (k for k in env.iterkeys() if k.startswith("env.")):
