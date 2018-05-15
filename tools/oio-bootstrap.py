@@ -663,7 +663,7 @@ group=${NS},localhost,conscience,${IP}:${PORT}
 on_die=cry
 enabled=true
 start_at_boot=true
-command=oio-daemon -s OIO,${NS},cs,${SRVNUM} ${CFGDIR}/${NS}-conscience-${SRVNUM}.conf
+command=oio-daemon -s OIO,${NS},cs,${SRVNUM} ${OPT_ARGS} ${CFGDIR}/${NS}-conscience-${SRVNUM}.conf
 """
 
 template_gridinit_meta = """
@@ -1233,6 +1233,10 @@ def generate(options):
             env = subenv({'SRVTYPE': 'conscience', 'SRVNUM': num,
                           'PORT': port, 'PORT_HUB': hub})
             add_service(env)
+            if options.get('with_persistence'):
+                env['OPT_ARGS'] = '-O PersistencePath=/tmp/consciencePersistenceFile PersistencePeriod=15'
+            else:
+                env['OPT_ARGS']= ''
             with open(gridinit(env), 'a+') as f:
                 tpl = Template(template_gridinit_conscience)
                 f.write(tpl.safe_substitute(env))
@@ -1256,6 +1260,10 @@ def generate(options):
             add_service(env)
             # gridinit config
             tpl = Template(template_gridinit_beanstalkd)
+            if options.get('with_persistence'):
+                ENV.update({'OPT_ARGS' : '-O PersistencePath=/tmp/consciencePersistenceFile PersistencePeriod=15'})
+            else:
+                ENV.update({'OPT_ARGS' : ''})
             with open(gridinit(env), 'a+') as f:
                 f.write(tpl.safe_substitute(env))
                 for key in (k for k in env.iterkeys() if k.startswith("env.")):
@@ -1520,6 +1528,7 @@ def generate(options):
     final_conf["storage_policy"] = stgpol
     final_conf["account"] = 'test_account'
     final_conf["sds_path"] = SDSDIR
+    final_conf["with_conscience_persistence"] = options.get('with_persistence')
     # TODO(jfs): remove this line only required by some tests cases
     final_conf["chunk_size"] = options['config']['ns.chunk_size']
     final_conf["proxy"] = final_services['proxy'][0]['addr']

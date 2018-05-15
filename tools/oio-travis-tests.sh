@@ -268,3 +268,7 @@ if is_running_test_suite "multi-beanstalk" ; then
 		-f "${SRCDIR}/etc/bootstrap-option-3beanstalkd.yml"
 fi
 
+if is_running_test_suite "conscience_persistence" ; then
+	echo -e "\n### Persistence conscience tests"
+	func_tests -f "${SRCDIR}/etc/bootstrap-option-persistence-conscience.yml"
+fi
