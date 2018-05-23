@@ -1234,7 +1234,7 @@ def generate(options):
                           'PORT': port, 'PORT_HUB': hub})
             add_service(env)
             if options.get('with_persistence'):
-                env['OPT_ARGS'] = '-O PersistencePath=/tmp/consciencePersistenceFile PersistencePeriod=15'
+                env['OPT_ARGS'] = '-O PersistencePath=/tmp/consciencePersistenceFile -O PersistencePeriod=15'
             else:
                 env['OPT_ARGS']= ''
             with open(gridinit(env), 'a+') as f:
