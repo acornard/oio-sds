@@ -121,7 +121,3 @@ add_executable(test_events_beanstalkd test_events_beanstalkd.c)
 target_link_libraries(test_events_beanstalkd ${COMMON} oioevents server)
 add_test(NAME events/beanstalkd COMMAND test_events_beanstalkd)
 
-add_executable(test_conscience test_conscience.c)
-target_link_libraries(test_conscience ${COMMON})
-add_test(NAME cluster/module/conscience COMMAND test_conscience)
-
