@@ -13,37 +13,67 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.
 
-import os
-from subprocess import check_call
+import simplejson as json
 import time
-
-from tests.utils import BaseTestCase
-
+import subprocess
+from tests.utils import CommonTestCase
+from tests.utils import CODE_SRVTYPE_NOTMANAGED
+from os.path import expanduser
 
 def exp(path):
-    return os.path.expanduser(path)
+    return expanduser(path)
 
 
-class TestConsciencePersistence(BaseTestCase):
+class TestConsciencePersistence(CommonTestCase):
 
-    def setUp(self):
-        super(TestConsciencePersistence, self).setUp()
-        if not self.conf['with_persistence']:
-            self.skipTest["Conscience persistence not enabled"]
+    def _start_proxy(self, ip, ns):
+        proc = subprocess.Popen(["oio-proxy", ip, ns])
+        return proc
 
-    def _service(self, name, action):
-        name = "%s-%s" % (self.conf['namespace'], name)
-        check_call(['gridinit_cmd', '-S',
-                    exp('~/.oio/sds/run/gridinit.sock'), action, name])
+    def _start_cs(self, path, period, conf):
+        cmd = "oio-daemon"
+        opt="-O"
+        path_opt = "PersistencePath="+exp(path)
+        period_opt = "PersistencePeriod="+str(period)
+        proc = subprocess.Popen([cmd, opt, path_opt, opt,
+                                 period_opt, exp(conf)])
+        return proc
+
+    def _kill_and_watch_it_die(self, proc):
+        try:
+            proc.terminate()
+        except Exception:
+            pass
+        proc.wait()
+
+    def _register_services(self, score, srvtype):
+        self._flush_cs(srvtype)
+        srv = self._srv(srvtype)
+        srv['score'] = 1
+        resp = self.request('POST', self._url_cs("lock"), json.dumps(srv))
+        self.assertIn(resp.status, (200, 204))
+
+    def _check_score(self, score, srvtype):
+        resp = self.request('GET', self._url_cs('list'),
+                             params={"type":srvtype})
+        body = self.json_loads(resp.data)
+        self.assertIsInstance(body, list)
+        self.assertEqual([score], [s['score'] for s in body])
 
     def test_conscience_persistence(self):
-        self.setUp()
-        time.sleep(20)
-        self._service('@openio', 'stop')
-        self._service('@conscience @proxy', 'start')
-        services = self.conf['services']
-        for srvtype in services:
-            if 'conscience' not in srvtype:
-                srv = self.get_service(srvtype)
-                self.assertEqual(srv['status'], 'DOWN')
-                self.assertGreater(srv['score'], 0)
+        cs_ps = self._start_cs('/tmp/pers', 1,
+                             '~/.oio/sds/conf/OPENIO-conscience-1.conf')
+        px_ps = self._start_proxy('127.0.0.1:6000', 'OPENIO')
+        time.sleep(0.1)
+
+        self._register_services(1, 'echo')
+        self._check_score(1, 'echo')
+
+        self._kill_and_watch_it_die(cs_ps)
+        cs_ps = self._start_cs('/tmp/pers', 1,
+                              '~/.oio/sds/conf/OPENIO-conscience-1.conf')
+        time.sleep(0.1)
+        self._check_score(1, 'echo')
+
+        self._kill_and_watch_it_die(cs_ps)
+        self._kill_and_watch_it_die(px_ps)

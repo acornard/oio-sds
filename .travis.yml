@@ -20,6 +20,7 @@ env:
   - TEST_SUITE=repli
   - TEST_SUITE=ec
   - TEST_SUITE=multi-beanstalk
+  - TEST_SUITE=persistence_conscience
 script:
   - sudo bash -c "echo '/tmp/core.%p.%E' > /proc/sys/kernel/core_pattern"
   - ulimit -c unlimited -S
