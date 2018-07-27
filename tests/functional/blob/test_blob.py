@@ -208,7 +208,10 @@ class RawxAbstractTestSuite(object):
         # check the whole download is correct
         # TODO FIXME getting an empty content should return 204
         resp, body = self._http_request(chunkurl, 'GET', '', {})
-        self.assertEqual(200, resp.status)
+        expected_code = 200
+        if length == 0 and isinstance(self, RawxV2TestSuite):
+            expected_code = 204
+        self.assertEqual(expected_code, resp.status)
         self.assertEqual(body, chunkdata)
         self.assertEqual(fullpath,
                          resp.getheader('x-oio-chunk-meta-full-path'))
@@ -654,9 +657,13 @@ class RawxAbstractTestSuite(object):
         self.assertEqual(400, resp.status)
 
     def test_old_fullpath(self):
+        if isinstance(self, RawxV2TestSuite):
+            self.skipTest('Rawx V2 read only new fullpath')
         self._cycle_put(32, 201, old_fullpath=True)
 
     def test_read_old_chunk(self):
+        if isinstance(self, RawxV2TestSuite):
+            self.skipTest('Rawx V2 read only new chunks')
         metachunk_hash = md5().hexdigest()
         trailers = {'x-oio-chunk-meta-metachunk-size': 1,
                     'x-oio-chunk-meta-metachunk-hash': metachunk_hash}
