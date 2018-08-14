@@ -3860,11 +3860,46 @@ _member_next_timeout(struct election_member_s *m)
 	}
 }
 
+/* static gchar * */
+/* event_type_to_string(enum event_type_e evt) */
+/* { */
+/* 	switch(evt){ */
+/* 	case EVT_NONE: return "EVT_NONE"; */
+/* 	case EVT_DISCONNECTED: return "EVT_DISCONNECTED";	 */
+/* 	case EVT_LEAVE_REQ: return "EVT_LEAVE_REQ"; */
+/* 	case EVT_SYNC_REQ: return "EVT_SYNC_REQ"; */
+/* 	case EVT_LEFT_SELF: return "EVT_LEFT_SELF"; */
+/* 	case EVT_LEFT_MASTER: return "EVT_LEFT_MASTER"; */
+/* 	case EVT_GETPEERS_DONE: return "EVT_GETPEERS_DONE"; */
+/* 	case EVT_GETVERS_OK: return "EVT_GETVERS_OK"; */
+/* 	case EVT_GETVERS_KO: return "EVT_GETVERS_KO"; */
+/* 	case EVT_GETVERS_OLD: return "EVT_GETVERS_OLD"; */
+/* 	case EVT_GETVERS_RACE: return "EVT_GETVERS_RACE"; */
+/* 	case EVT_MASTER_OK: return "EVT_MASTER_OK"; */
+/* 	case EVT_MASTER_KO: return "EVT_MASTER_KO"; */
+/* 	case EVT_MASTER_BAD: return "EVT_MASTER_BAD"; */
+/* 	case EVT_CREATE_OK: return "EVT_CREATE_OK"; */
+/* 	case EVT_CREATE_KO: return "EVT_CREATE_KO"; */
+/* 	case EVT_EXISTS_OK: return "EVT_EXISTS_OK"; */
+/* 	case EVT_EXISTS_KO: return "EVT_EXISTS_KO"; */
+/* 	case EVT_LIST_OK: return "EVT_LIST_OK"; */
+/* 	case EVT_LIST_KO: return "EVT_LIST_KO"; */
+/* 	case EVT_LEAVE_OK: return "EVT_LEAVE_OK"; */
+/* 	case EVT_LEAVE_KO: return "EVT_LEAVE_KO"; */
+/* 	case EVT_SYNC_OK:return "EVT_SYNC_OK"; */
+/* 	case EVT_SYNC_KO: return "EVT_SYNC_KO"; */
+/* 	} */
+/* 	return ""; */
+/* } */
+
+
 static void
 _member_react (struct election_member_s *member,
 		enum event_type_e evt,
 		void *evt_arg)
 {
+	/* GRID_WARN("event_type:%s on _member_react()", event_type_to_string(evt)); */
+
 	/* EVT_DISCONNECTED is sent when we lost the link with ZK. All the
 	 * ephemeral nodes will be lost, soon. We can reset an elections FSM
 	 * receiving this event, whatever its state. */
@@ -3879,6 +3914,8 @@ _member_react (struct election_member_s *member,
 		g_snprintf(tag, sizeof(tag), "evt:%d/%s", evt, _evt2str(evt));
 		member_trace(tag, member);
 	}
+
+	/* GRID_WARN("member_step:%d on _member_reat()", member->step); */
 
 	switch (member->step) {
 		case STEP_NONE:
@@ -3925,6 +3962,7 @@ _member_react (struct election_member_s *member,
 
 	g_assert_not_reached();
 }
+
 
 static void
 transition(struct election_member_s *member, enum event_type_e evt,

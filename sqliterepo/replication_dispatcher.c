@@ -440,8 +440,14 @@ _restore2(struct sqlx_repository_s *repo, struct sqlx_name_s *name,
 	struct sqlx_sqlite3_s *sq3 = NULL;
 	GError *err = sqlx_repository_open_and_lock(repo, name,
 		SQLX_OPEN_LOCAL|SQLX_OPEN_NOREFCHECK|SQLX_OPEN_CREATE, &sq3, NULL);
+	/* gchar *account = sqlx_admin_get_str(sq3, SQLX_ADMIN_ACCOUNT); */
+	/* gchar *user = sqlx_admin_get_str(sq3, SQLX_ADMIN_USERNAME); */
+	/* GRID_WARN("account = %s, user = %s", account, user); */
 	if (!err) {
 		err = sqlx_repository_restore_from_file(sq3, path);
+		/* account = sqlx_admin_get_str(sq3, SQLX_ADMIN_ACCOUNT); */
+		/* user = sqlx_admin_get_str(sq3, SQLX_ADMIN_USERNAME); */
+		/* GRID_WARN("account = %s, user = %s", account, user); */
 		if (!err) {
 			sqlx_repository_call_change_callback(sq3);
 		}

@@ -603,7 +603,7 @@ meta2_backend_create_container(struct meta2_backend_s *m2,
 {
 	GError *err = NULL;
 	struct sqlx_sqlite3_s *sq3 = NULL;
-
+	GRID_WARN("On meta2_backend_create_container");
 	GRID_DEBUG("CREATE(%s,%s,%s)%s", oio_url_get(url, OIOURL_WHOLE),
 			params?params->storage_policy:NULL,
 			params?params->version_policy:NULL,
@@ -1424,15 +1424,52 @@ _meta2_backend_force_prepare_data(struct meta2_backend_s *m2b,
 	g_rw_lock_writer_unlock(&(m2b->prepare_data_lock));
 }
 
+static gchar *
+get_election_status(struct sqlx_sqlite3_s *sq3)
+{
+	enum election_status_e st = sq3->election;
+	gchar *res = malloc(8*sizeof(gchar));
+	res = "";
+	switch(st){
+	case 1: res="LOST";
+	case 2: res="LEADER";
+	case 4: res="FAILED";
+	}
+	return res;
+}
+
+
+
+/* static gboolean */
+/* log_key (gpointer key, gpointer value, gpointer data) */
+/* { */
+/* 	GRID_WARN("key=%s", (char *)key); */
+/* 	data = value; */
+/* 	value = data; */
+/* 	return FALSE; */
+/* } */
+
+/* static void */
+/* get_tree_keys(struct sqlx_sqlite3_s *sq3) */
+/* { */
+/* 	g_tree_foreach(sq3->admin, log_key, NULL); */
+/* 	return;		 */
+/* } */
+
 void
 meta2_backend_change_callback(struct sqlx_sqlite3_s *sq3,
 		struct meta2_backend_s *m2b)
 {
+	//get_tree_keys(sq3);
 	gchar *account = sqlx_admin_get_str(sq3, SQLX_ADMIN_ACCOUNT);
 	gchar *user = sqlx_admin_get_str(sq3, SQLX_ADMIN_USERNAME);
+	GRID_WARN("call to change callback, election status is %s, admin_dirty is %d, nnodes is %d"
+		  , get_election_status(sq3), sq3->admin_dirty,
+		  g_tree_nnodes(sq3->admin));
 	if (!account || !user) {
-		GRID_WARN("Missing "SQLX_ADMIN_ACCOUNT" or "SQLX_ADMIN_USERNAME
-				" in database %s", sq3->path_inline);
+		GRID_ERROR("Missing "SQLX_ADMIN_ACCOUNT" or "SQLX_ADMIN_USERNAME
+				" in database %s, account:%s, user:%s",
+			  sq3->path_inline, account, user);
 	} else {
 		struct oio_url_s *url = oio_url_empty();
 		oio_url_set(url, OIOURL_NS, m2b->ns_name);

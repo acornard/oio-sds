@@ -700,6 +700,7 @@ sqlx_transaction_end(struct sqlx_repctx_s *ctx, GError *err)
 		sqlx_alert_dirty_base (ctx->sq3, "still dirty after transaction");
 
 	if (ctx->any_change) {
+		GRID_WARN("replication.c L703");
 		sqlx_repository_call_change_callback(ctx->sq3);
 		ctx->any_change = 0;
 	}
